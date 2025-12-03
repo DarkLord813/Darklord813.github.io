@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - 𝕻𝕾𝕻 𝕲𝕬𝕸𝕰𝕽𝕾™</title>
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+        /* Session timeout warning */
+        .session-warning {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff9800;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: pulseWarning 2s infinite;
+        }
+        
+        @keyframes pulseWarning {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Enhanced security features */
+        .security-log {
+            font-size: 12px;
+            color: #666;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .admin-activity {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #999;
+        }
+</style>
+  </head>
+  <body class="admin-page">
+    <!-- Session timeout warning -->
+    <div class="session-warning" id="sessionWarning">
+	  <i class="fas fa-clock"></i> Session expires in <span id="sessionTimer">5:00</span>
+    </div>
+
+    <header class="admin-header">
+	  <div class="container">
+		<h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+		<div class="admin-info">
+		  <span id="adminName">Admin</span>
+		  <span class="login-time" id="loginTime"></span>
+		</div>
+		<nav>
+		  <ul>
+			<li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+			<li><a href="#" class="active"><i class="fas fa-plus-circle"></i> Add Game</a></li>
+			<li><a href="#" id="viewGames"><i class="fas fa-list"></i> View Games</a></li>
+			<li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+		  </ul>
+		</nav>
+	  </div>
+    </header>
+
+    <main class="container">
+	  <div class="admin-panel">
+		<div class="admin-sidebar">
+		  <h3><i class="fas fa-tools"></i> Admin Tools</h3>
+		  <ul>
+			<li class="active"><a href="#addGame"><i class="fas fa-plus"></i> Add New Game</a></li>
+			<li><a href="#manageGames"><i class="fas fa-edit"></i> Manage Games</a></li>
+			<li><a href="#uploadedImages"><i class="fas fa-images"></i> Uploaded Images</a></li>
+			<li><a href="#stats"><i class="fas fa-chart-bar"></i> Statistics</a></li>
+			<li><a href="#security"><i class="fas fa-shield-alt"></i> Security</a></li>
+		  </ul>
+		</div>
+
+		<div class="admin-content">
+		  <!-- Add Game Form -->
+		  <section id="addGame" class="admin-section active">
+			<h2><i class="fas fa-gamepad"></i> Add New Game</h2>
+			<form id="gameForm" class="game-form">
+			  <div class="form-row">
+				<div class="form-group">
+				  <label for="gameName"><i class="fas fa-font"></i> Game Name *</label>
+				  <input type="text" id="gameName" name="gameName" required>
+				</div>
+				<div class="form-group">
+				  <label for="gameVersion"><i class="fas fa-code-branch"></i> Version</label>
+				  <input type="text" id="gameVersion" name="gameVersion" placeholder="e.g., 1.0.0">
+				</div>
+			  </div>
+
+			  <div class="form-row">
+				<div class="form-group">
+				  <label for="gameGenre"><i class="fas fa-tags"></i> Genre *</label>
+				  <select id="gameGenre" name="gameGenre" required>
+					<option value="">Select Genre</option>
+					<option value="Action">Action</option>
+					<option value="Adventure">Adventure</option>
+					<option value="RPG">RPG</option>
+					<option value="Sports">Sports</option>
+					<option value="Tools">Tools</option>
+					<option value="Strategy">Strategy</option>
+					<option value="Racing">Racing</option>
+					<option value="Puzzle">Puzzle</option>
+				  </select>
+				</div>
+				<div class="form-group">
+				  <label for="gameSize"><i class="fas fa-hdd"></i> Size *</label>
+				  <input type="text" id="gameSize" name="gameSize" required placeholder="e.g., 50M or 2GB">
+				</div>
+			  </div>
+
+			  <!-- Platform Selection -->
+			  <div class="form-group">
+				<label><i class="fas fa-gamepad"></i> Platform *</label>
+				<div class="platform-selector">
+				  <div class="platform-option">
+					<input type="radio" id="platform-android" name="platform" value="Android" checked>
+					<label for="platform-android" class="platform-label android">
+					  <i class="fab fa-android"></i>
+					  <span>Android</span>
+					</label>
+				  </div>
+				  <div class="platform-option">
+					<input type="radio" id="platform-pc" name="platform" value="PC">
+					<label for="platform-pc" class="platform-label pc">
+					  <i class="fas fa-desktop"></i>
+					  <span>PC</span>
+					</label>
+				  </div>
+				  <div class="platform-option">
+					<input type="radio" id="platform-psp" name="platform" value="PSP">
+					<label for="platform-psp" class="platform-label psp">
+					  <i class="fas fa-gamepad"></i>
+					  <span>PSP</span>
+					</label>
+				  </div>
+				  <div class="platform-option">
+					<input type="radio" id="platform-ps2" name="platform" value="PS2">
+					<label for="platform-ps2" class="platform-label ps2">
+					  <i class="fas fa-gamepad"></i>
+					  <span>PS2</span>
+					</label>
+				  </div>
+				</div>
+			  </div>
+
+			  <div class="form-group">
+				<label for="gameDescription"><i class="fas fa-file-alt"></i> Description</label>
+				<textarea id="gameDescription" name="gameDescription" rows="3"></textarea>
+			  </div>
+
+			  <div class="form-group">
+				<label for="modInfo"><i class="fas fa-unlock-alt"></i> MOD Info *</label>
+				<textarea id="modInfo" name="modInfo" rows="2" required placeholder="e.g., Premium Unlocked, No Ads"></textarea>
+			  </div>
+
+			  <!-- Image Upload -->
+			  <div class="form-group">
+				<label for="gameImage"><i class="fas fa-image"></i> Game Image *</label>
+				<div class="image-upload-container">
+				  <input type="file" id="gameImage" name="gameImage" accept="image/*" required>
+				  <label for="gameImage" class="upload-btn">
+					<i class="fas fa-cloud-upload-alt"></i> Choose Image
+				  </label>
+				  <span class="file-name">No file chosen</span>
+				  <div class="image-preview" id="imagePreview">
+					<img src="" alt="Preview" id="previewImage">
+					<span>No image selected</span>
+				  </div>
+				  <p class="upload-note">Recommended: 300x200px, Max 2MB</p>
+				</div>
+			  </div>
+
+			  <!-- Download Links -->
+			  <div class="form-group">
+				<label><i class="fas fa-download"></i> Download Links *</label>
+				<div id="downloadLinks">
+				  <div class="download-link">
+					<select class="link-platform">
+					  <option value="Google Play">Google Play</option>
+					  <option value="Direct">Direct Download</option>
+					  <option value="MediaFire">MediaFire</option>
+					  <option value="Mega">MEGA</option>
+					  <option value="Other">Other</option>
+					</select>
+					<input type="url" class="link-url" placeholder="https://..." required>
+					<button type="button" class="remove-link"><i class="fas fa-times"></i></button>
+				  </div>
+				</div>
+				<button type="button" id="addLink" class="btn-secondary">
+				  <i class="fas fa-plus"></i> Add Another Link
+				</button>
+			  </div>
+
+			  <div class="form-actions">
+				<button type="submit" class="btn-primary">
+				  <i class="fas fa-save"></i> Save Game
+				</button>
+				<button type="reset" class="btn-reset">
+				  <i class="fas fa-redo"></i> Reset Form
+				</button>
+			  </div>
+			</form>
+		  </section>
+
+		  <!-- Manage Games Section -->
+		  <section id="manageGames" class="admin-section">
+			<h2><i class="fas fa-edit"></i> Manage Games</h2>
+			<div class="filter-platforms">
+			  <button class="platform-filter active" data-platform="all">All Platforms</button>
+			  <button class="platform-filter" data-platform="Android">Android</button>
+			  <button class="platform-filter" data-platform="PC">PC</button>
+			  <button class="platform-filter" data-platform="PSP">PSP</button>
+			  <button class="platform-filter" data-platform="PS2">PS2</button>
+			</div>
+			<div class="games-list" id="adminGamesList">
+			  <!-- Games will be loaded here -->
+			</div>
+		  </section>
+
+		  <!-- Uploaded Images -->
+		  <section id="uploadedImages" class="admin-section">
+			<h2><i class="fas fa-images"></i> Uploaded Images</h2>
+			<div class="filter-platforms">
+			  <button class="platform-filter active" data-platform="all">All Platforms</button>
+			  <button class="platform-filter" data-platform="Android">Android</button>
+			  <button class="platform-filter" data-platform="PC">PC</button>
+			  <button class="platform-filter" data-platform="PSP">PSP</button>
+			  <button class="platform-filter" data-platform="PS2">PS2</button>
+			</div>
+			<div class="images-grid" id="uploadedImagesGrid">
+			  <!-- Images will be loaded here -->
+			</div>
+		  </section>
+
+		  <!-- Statistics -->
+		  <section id="stats" class="admin-section">
+			<h2><i class="fas fa-chart-bar"></i> Statistics</h2>
+			<div class="stats-grid">
+			  <div class="stat-card">
+				<h3><i class="fas fa-gamepad"></i> Total Games</h3>
+				<p class="stat-number" id="totalGames">0</p>
+			  </div>
+			  <div class="stat-card">
+				<h3><i class="fas fa-download"></i> Total Downloads</h3>
+				<p class="stat-number" id="totalDownloads">0</p>
+			  </div>
+			  <div class="stat-card">
+				<h3><i class="fas fa-images"></i> Images Uploaded</h3>
+				<p class="stat-number" id="totalImages">0</p>
+			  </div>
+			  <div class="stat-card">
+				<h3><i class="fas fa-calendar"></i> Last Updated</h3>
+				<p class="stat-date" id="lastUpdated">-</p>
+			  </div>
+			</div>
+			<div class="platform-stats">
+			  <h3><i class="fas fa-chart-pie"></i> Games by Platform</h3>
+			  <div class="platform-chart" id="platformChart">
+				<!-- Platform stats will be loaded here -->
+			  </div>
+			</div>
+		  </section>
+
+		  <!-- Security Section -->
+		  <section id="security" class="admin-section">
+			<h2><i class="fas fa-shield-alt"></i> Security</h2>
+			<div class="security-info">
+			  <div class="security-card">
+				<h3><i class="fas fa-user-shield"></i> Session Info</h3>
+				<p><strong>Logged in as:</strong> <span id="securityUsername"></span></p>
+				<p><strong>Session started:</strong> <span id="securityLoginTime"></span></p>
+				<p><strong>Session expires:</strong> <span id="securityExpiryTime"></span></p>
+				<p><strong>IP Address:</strong> <span id="securityIP">Detecting...</span></p>
+			  </div>
+
+			  <div class="security-card">
+				<h3><i class="fas fa-history"></i> Recent Activity</h3>
+				<div class="activity-log" id="activityLog">
+				  <p>No recent activity</p>
+				</div>
+			  </div>
+
+			  <div class="security-card">
+				<h3><i class="fas fa-cog"></i> Security Settings</h3>
+				<button class="btn-secondary" id="clearCache">
+				  <i class="fas fa-trash"></i> Clear Cache
+				</button>
+				<button class="btn-reset" id="forceLogout">
+				  <i class="fas fa-sign-out-alt"></i> Force Logout All
+				</button>
+				<div class="security-log" id="securityLog"></div>
+			  </div>
+			</div>
+		  </section>
+		</div>
+	  </div>
+    </main>
+
+    <div id="adminMessage" class="admin-message"></div>
+
+    <!-- Hidden admin activity tracker -->
+    <div class="admin-activity" id="adminActivity">
+	  Last active: <span id="lastActiveTime">Just now</span>
+    </div>
+
+    <script src="js/admin.js"></script>
+<script>
+        // Enhanced security for admin panel
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication first
+            const isAuthenticated = localStorage.getItem('adminAuthenticated');
+            const loginTime = localStorage.getItem('adminLoginTime');
+            
+            if (!isAuthenticated || isAuthenticated !== 'true' || !loginTime) {
+                logout();
+                return;
+            }
+            
+            // Verify session hasn't expired
+            const loginDate = new Date(loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+            
+            // Auto-logout after 8 hours
+            if (hoursDiff > 8) {
+                logout();
+                return;
+            }
+            
+            // Update admin info
+            const adminName = localStorage.getItem('adminUsername') || 'Admin';
+            document.getElementById('adminName').textContent = adminName;
+            document.getElementById('securityUsername').textContent = adminName;
+            
+            // Format login time
+            const loginTimeFormatted = loginDate.toLocaleString();
+            document.getElementById('loginTime').textContent = `Logged in: ${loginTimeFormatted}`;
+            document.getElementById('securityLoginTime').textContent = loginTimeFormatted;
+            
+            // Calculate expiry time
+            const expiryDate = new Date(loginDate.getTime() + (8 * 60 * 60 * 1000));
+            document.getElementById('securityExpiryTime').textContent = expiryDate.toLocaleString();
+            
+            // Start session timer
+            startSessionTimer(expiryDate);
+            
+            // Get IP address
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('securityIP').textContent = data.ip;
+                })
+                .catch(() => {
+                    document.getElementById('securityIP').textContent = 'Unknown';
+                });
+            
+            // Setup activity tracking
+            setupActivityTracking();
+            
+            // Setup security buttons
+            setupSecurityButtons();
+            
+            // Log admin access
+            logActivity('Admin panel accessed');
+        });
+        
+        function startSessionTimer(expiryDate) {
+            const sessionWarning = document.getElementById('sessionWarning');
+            const sessionTimer = document.getElementById('sessionTimer');
+            
+            function updateTimer() {
+                const now = new Date();
+                const diffMs = expiryDate - now;
+                
+                if (diffMs <= 0) {
+                    logout();
+                    return;
+                }
+                
+                // Show warning when less than 5 minutes remain
+                if (diffMs < 5 * 60 * 1000) {
+                    sessionWarning.style.display = 'block';
+                }
+                
+                // Update timer display
+                const minutes = Math.floor(diffMs / 60000);
+                const seconds = Math.floor((diffMs % 60000) / 1000);
+                sessionTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Continue updating
+                setTimeout(updateTimer, 1000);
+            }
+            
+            updateTimer();
+        }
+        
+        function setupActivityTracking() {
+            let lastActivity = new Date();
+            const activityElement = document.getElementById('lastActiveTime');
+            
+            // Update on user activity
+            const activities = ['mousemove', 'keypress', 'click', 'scroll'];
+            activities.forEach(activity => {
+                document.addEventListener(activity, () => {
+                    lastActivity = new Date();
+                    updateActivityTime();
+                });
+            });
+            
+            function updateActivityTime() {
+                const now = new Date();
+                const diffMs = now - lastActivity;
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                if (diffMins === 0) {
+                    activityElement.textContent = 'Just now';
+                } else if (diffMins === 1) {
+                    activityElement.textContent = '1 minute ago';
+                } else if (diffMins < 60) {
+                    activityElement.textContent = `${diffMins} minutes ago`;
+                } else {
+                    activityElement.textContent = 'Over an hour ago';
+                }
+            }
+            
+            // Update every minute
+            setInterval(updateActivityTime, 60000);
+            updateActivityTime();
+        }
+        
+        function setupSecurityButtons() {
+            // Clear cache button
+            document.getElementById('clearCache')?.addEventListener('click', function() {
+                if (confirm('Clear all cached data? This will remove games and ratings.')) {
+                    localStorage.removeItem('pspgamers_games');
+                    localStorage.removeItem('pspgamers_ratings');
+                    showAdminMessage('Cache cleared successfully!', 'success');
+                    logActivity('Cache cleared');
+                    
+                    // Reload games if on manage games page
+                    if (typeof loadGames === 'function') {
+                        loadGames();
+                    }
+                }
+            });
+            
+            // Force logout button
+            document.getElementById('forceLogout')?.addEventListener('click', function() {
+                if (confirm('Logout from all devices? This will end your current session.')) {
+                    logout();
+                }
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        }
+        
+        function logActivity(action) {
+            const activityLog = document.getElementById('activityLog');
+            const securityLog = document.getElementById('securityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = `<p><strong>${timestamp}:</strong> ${action}</p>`;
+            
+            if (activityLog) {
+                // Add to activity log
+                if (activityLog.innerHTML.includes('No recent activity')) {
+                    activityLog.innerHTML = logEntry;
+                } else {
+                    activityLog.innerHTML = logEntry + activityLog.innerHTML;
+                }
+                
+                // Keep only last 10 entries
+                const entries = activityLog.querySelectorAll('p');
+                if (entries.length > 10) {
+                    entries[entries.length - 1].remove();
+                }
+            }
+            
+            // Also show in security log briefly
+            if (securityLog) {
+                securityLog.innerHTML = `${timestamp}: ${action}`;
+                securityLog.style.display = 'block';
+                setTimeout(() => {
+                    securityLog.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('adminAuthenticated');
+            localStorage.removeItem('adminUsername');
+            localStorage.removeItem('adminLoginTime');
+            window.location.href = 'login.html';
+        }
+        
+        // Override the window.logout function
+        window.logout = logout;
+</script>
+  </body>
+</html>
