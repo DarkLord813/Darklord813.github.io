@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - 𝕻𝕾𝕻 𝕲𝕬𝕸𝕰𝕽𝕾™</title>
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+        /* Hidden credentials - only visible with special combination */
+        .hidden-credentials {
+            display: none;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .show-creds-btn {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            text-decoration: underline;
+        }
+        
+        .secret-code-input {
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            width: 100%;
+            display: none;
+        }
+</style>
+  </head>
+  <body class="login-page">
+    <div class="login-container">
+	  <div class="login-header">
+		<h1><i class="fas fa-user-shield"></i> Admin Login</h1>
+		<p>Access the admin panel to post games</p>
+	  </div>
+
+	  <form id="loginForm" class="login-form">
+		<div class="form-group">
+		  <label for="username"><i class="fas fa-user"></i> Username</label>
+		  <input type="text" id="username" name="username" placeholder="Enter admin username" required autocomplete="off">
+		</div>
+
+		<div class="form-group">
+		  <label for="password"><i class="fas fa-lock"></i> Password</label>
+		  <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="off">
+		  <button type="button" class="show-password" id="showPassword">
+			<i class="fas fa-eye"></i>
+		  </button>
+		</div>
+
+		<button type="submit" class="btn-login">
+		  <i class="fas fa-sign-in-alt"></i> Login
+		</button>
+
+		<!-- Hidden credentials section -->
+		<div class="hidden-credentials" id="hiddenCredentials">
+		  <div class="login-info">
+			<p><strong>Admin Credentials:</strong></p>
+			<p>Username: <code id="hiddenUsername">[Hidden]</code></p>
+			<p>Password: <code id="hiddenPassword">[Hidden]</code></p>
+		  </div>
+		</div>
+
+		<!-- Hidden trigger button -->
+		<button type="button" class="show-creds-btn" id="showCredsBtn">
+		  <i class="fas fa-key"></i> Request Access
+		</button>
+
+		<!-- Hidden secret code input -->
+		<input type="text" id="secretCode" class="secret-code-input" 
+		  placeholder="Enter access code" 
+		  pattern="[0-9]*" 
+		  inputmode="numeric">
+
+		<div class="back-home">
+		  <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
+		</div>
+	  </form>
+
+	  <div id="loginMessage" class="message"></div>
+    </div>
+
+<script>
+        // Secure credentials - hidden in base64
+        const SECRET_CODE = "20251203"; // Date-based code
+        const ENCRYPTED_USERNAME = "cHNwZ2FtZXJz"; // base64 encoded
+        const ENCRYPTED_PASSWORD = "YWRtaW4yMDI1"; // base64 encoded
+        
+        // Decode function
+        function decodeBase64(str) {
+            try {
+                return atob(str);
+            } catch (e) {
+                return "";
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const showPasswordBtn = document.getElementById('showPassword');
+            const passwordInput = document.getElementById('password');
+            const showCredsBtn = document.getElementById('showCredsBtn');
+            const secretCodeInput = document.getElementById('secretCode');
+            const hiddenCredentials = document.getElementById('hiddenCredentials');
+            const messageDiv = document.getElementById('loginMessage');
+            
+            // Toggle password visibility
+            if (showPasswordBtn && passwordInput) {
+                showPasswordBtn.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+            }
+            
+            // Show credentials button
+            if (showCredsBtn) {
+                showCredsBtn.addEventListener('click', function() {
+                    secretCodeInput.style.display = 'block';
+                    secretCodeInput.focus();
+                    showMessage('Enter access code to view credentials', 'info');
+                });
+            }
+            
+            // Secret code input
+            if (secretCodeInput) {
+                secretCodeInput.addEventListener('input', function() {
+                    if (this.value === SECRET_CODE) {
+                        // Show hidden credentials
+                        document.getElementById('hiddenUsername').textContent = decodeBase64(ENCRYPTED_USERNAME);
+                        document.getElementById('hiddenPassword').textContent = decodeBase64(ENCRYPTED_PASSWORD);
+                        hiddenCredentials.style.display = 'block';
+                        hiddenCredentials.style.opacity = '1';
+                        hiddenCredentials.style.height = 'auto';
+                        secretCodeInput.style.display = 'none';
+                        showMessage('Access granted! Credentials revealed.', 'success');
+                        
+                        // Auto-hide after 30 seconds
+                        setTimeout(() => {
+                            hiddenCredentials.style.display = 'none';
+                            document.getElementById('hiddenUsername').textContent = '[Hidden]';
+                            document.getElementById('hiddenPassword').textContent = '[Hidden]';
+                        }, 30000);
+                    }
+                });
+                
+                // Prevent form submission on Enter in secret code
+                secretCodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+            
+            // Login form submission
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value.trim();
+                    
+                    // Validate
+                    if (!username || !password) {
+                        showMessage('Please enter both username and password', 'error');
+                        return;
+                    }
+                    
+                    // Verify credentials
+                    const correctUsername = decodeBase64(ENCRYPTED_USERNAME);
+                    const correctPassword = decodeBase64(ENCRYPTED_PASSWORD);
+                    
+                    if (username === correctUsername && password === correctPassword) {
+                        // Store authentication
+                        localStorage.setItem('adminAuthenticated', 'true');
+                        localStorage.setItem('adminUsername', username);
+                        localStorage.setItem('adminLoginTime', new Date().toISOString());
+                        
+                        showMessage('Login successful! Redirecting...', 'success');
+                        
+                        // Redirect to admin dashboard
+                        setTimeout(() => {
+                            window.location.href = 'admin.html';
+                        }, 1000);
+                    } else {
+                        showMessage('Invalid username or password', 'error');
+                        // Clear form on wrong attempt
+                        document.getElementById('password').value = '';
+                        document.getElementById('password').focus();
+                    }
+                });
+            }
+            
+            // Check if already logged in
+            const isAuthenticated = localStorage.getItem('adminAuthenticated');
+            if (isAuthenticated === 'true') {
+                const loginTime = localStorage.getItem('adminLoginTime');
+                const loginDate = new Date(loginTime);
+                const now = new Date();
+                const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+                
+                // Auto-logout after 8 hours
+                if (hoursDiff > 8) {
+                    localStorage.removeItem('adminAuthenticated');
+                    localStorage.removeItem('adminUsername');
+                    localStorage.removeItem('adminLoginTime');
+                } else {
+                    // Redirect to admin if already logged in
+                    window.location.href = 'admin.html';
+                }
+            }
+            
+            // Clear form on page load
+            if (loginForm) {
+                loginForm.reset();
+            }
+        });
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('loginMessage');
+            if (messageDiv) {
+                messageDiv.textContent = text;
+                messageDiv.className = `message ${type}`;
+                
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = 'message';
+                }, 5000);
+            }
+        }
+</script>
+  </body>
+</html>
