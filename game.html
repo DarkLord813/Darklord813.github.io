@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game - 𝕻𝕾𝕻 𝕲𝕬𝕸𝕰𝕽𝕾™</title>
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo"><i class="fas fa-gamepad"></i> 𝕻𝕾𝕻<span>𝕲𝕬𝕸𝕰𝕽𝕾™</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="games.html"><i class="fas fa-gamepad"></i> Games</a></li>
+                    <li><a href="#" id="adminLink" style="display: none;"><i class="fas fa-user-shield"></i> Admin</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="gameContent">
+            <!-- Game will be loaded here -->
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Loading game...</p>
+            </div>
+        </div>
+
+        <div id="notFound" style="display: none;">
+            <div class="error-page">
+                <i class="fas fa-gamepad-slash fa-5x"></i>
+                <h2>Game Not Found</h2>
+                <p>The game you're looking for doesn't exist or has been removed.</p>
+                <a href="games.html" class="btn-primary">
+                    <i class="fas fa-gamepad"></i> Browse Games
+                </a>
+                <a href="index.html" class="btn-secondary">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 𝕻𝕾𝕻 𝕲𝕬𝕸𝕰𝕽𝕾™. All rights reserved.</p>
+            <p class="disclaimer">This website is for educational purposes only. All games belong to their respective owners.</p>
+        </div>
+    </footer>
+
+    <script src="js/game-viewer.js"></script>
+</body>
+</html>
