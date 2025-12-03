@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games - 𝕻𝕾𝕻 𝕲𝕬𝕸𝕰𝕽𝕾™</title>
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  </head>
+  <body>
+    <header>
+	  <div class="container">
+		<h1 class="logo"><i class="fas fa-gamepad"></i> 𝕻𝕾𝕻<span>𝕲𝕬𝕸𝕰𝕽𝕾™</span></h1>
+		<nav>
+		  <ul>
+			<li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+			<li><a href="games.html" class="active"><i class="fas fa-gamepad"></i> Games</a></li>
+			<li><a href="#"><i class="fas fa-star"></i> Premium</a></li>
+			<li><a href="#"><i class="fas fa-info-circle"></i> About</a></li>
+			<li><a href="login.html" class="admin-btn"><i class="fas fa-user-shield"></i> Admin</a></li>
+		  </ul>
+		</nav>
+	  </div>
+    </header>
+
+    <main class="container">
+	  <div class="games-header">
+		<h1><i class="fas fa-gamepad"></i> All Games</h1>
+		<div class="search-filter">
+		  <div class="search-box">
+			<i class="fas fa-search"></i>
+			<input type="text" id="searchGames" placeholder="Search games...">
+		  </div>
+		  <select id="genreFilter" class="genre-filter">
+			<option value="">All Genres</option>
+			<option value="Action">Action</option>
+			<option value="Adventure">Adventure</option>
+			<option value="RPG">RPG</option>
+			<option value="Tools">Tools</option>
+		  </select>
+		  <select id="platformFilter" class="platform-filter">
+			<option value="">All Platforms</option>
+			<option value="Android">Android</option>
+			<option value="PC">PC</option>
+			<option value="PSP">PSP</option>
+			<option value="PS2">PS2</option>
+		  </select>
+		</div>
+	  </div>
+
+	  <div class="games-grid" id="gamesGrid">
+		<!-- Games will be loaded here -->
+	  </div>
+
+	  <div class="no-games" id="noGames" style="display: none;">
+		<i class="fas fa-gamepad fa-3x"></i>
+		<h3>No Games Found</h3>
+		<p>Check back later for new games!</p>
+		<a href="index.html" class="btn-primary">
+		  <i class="fas fa-home"></i> Back to Home
+		</a>
+	  </div>
+    </main>
+
+    <footer>
+	  <div class="container">
+		<p>© 2025 𝕻𝕾𝕻 𝕲𝕬𝕸𝕰𝕽𝕾™. All rights reserved.</p>
+		<p class="disclaimer">This website is for educational purposes only. All games belong to their respective owners.</p>
+	  </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/rating.js"></script>
+  </body>
+</html>
