@@ -1,10 +1,13 @@
-// Complete admin.js - Admin Dashboard Functionality
+// Complete admin.js - Admin Dashboard Functionality with Sharing
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
     checkAdminAuth();
     
     // Setup admin dashboard functionality
     setupAdminDashboard();
+    
+    // Add share styles
+    addShareStyles();
 });
 
 // Check if admin is authenticated
@@ -34,6 +37,14 @@ function checkAdminAuth() {
     // Format and display login time
     const loginTimeFormatted = loginDate.toLocaleString();
     document.getElementById('loginTime').textContent = `Logged in: ${loginTimeFormatted}`;
+    
+    // Update security section
+    document.getElementById('securityUsername').textContent = adminName;
+    document.getElementById('securityLoginTime').textContent = loginTimeFormatted;
+    
+    // Calculate expiry time (8 hours from login)
+    const expiryDate = new Date(loginDate.getTime() + (8 * 60 * 60 * 1000));
+    document.getElementById('securityExpiryTime').textContent = expiryDate.toLocaleString();
 }
 
 // Setup all admin dashboard functionality
@@ -50,10 +61,14 @@ function setupAdminDashboard() {
     // Setup security buttons
     setupSecurityButtons();
     
+    // Setup share functionality
+    setupShareButtons();
+    
     // Load initial data
     loadGames();
     loadUploadedImages();
     loadStats();
+    loadSecurityInfo();
     
     // Setup logout button
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
@@ -335,7 +350,8 @@ async function saveGame() {
             downloads: 0,
             rating: 0,
             votes: 0,
-            ratingDistribution: [0, 0, 0, 0, 0]
+            ratingDistribution: [0, 0, 0, 0, 0],
+            views: 0
         };
         
         // Save to localStorage
@@ -661,12 +677,19 @@ function loadGames() {
                     <span><i class="fas fa-tags"></i> ${game.genre}</span>
                     <span><i class="fas fa-hdd"></i> ${game.size}</span>
                     <span><i class="fas fa-download"></i> ${game.downloads || 0} downloads</span>
+                    <span><i class="fas fa-eye"></i> ${game.views || 0} views</span>
                     ${game.rating ? `<span><i class="fas fa-star"></i> ${game.rating.toFixed(1)}/5</span>` : ''}
                 </div>
                 <p class="admin-game-desc">${game.modInfo || 'No MOD info available'}</p>
-                <p class="admin-game-date">Added: ${new Date(game.dateAdded).toLocaleDateString()}</p>
+                <p class="admin-game-date">
+                    Added: ${new Date(game.dateAdded).toLocaleDateString()}
+                    ${game.lastUpdated ? `<br>Updated: ${new Date(game.lastUpdated).toLocaleDateString()}` : ''}
+                </p>
             </div>
             <div class="admin-game-actions">
+                <button class="btn-share" onclick="showShareOptions(${game.id})" title="Share Game">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
                 <button class="btn-edit" onclick="editGame(${game.id})">
                     <i class="fas fa-edit"></i> Edit
                 </button>
@@ -784,11 +807,20 @@ function loadPlatformStats(games) {
         'PS2': 0
     };
     
+    // Count views by platform
+    const platformViews = {
+        'Android': 0,
+        'PC': 0,
+        'PSP': 0,
+        'PS2': 0
+    };
+    
     games.forEach(game => {
         const platform = game.platform || 'Android';
         if (platformCounts[platform] !== undefined) {
             platformCounts[platform]++;
             platformDownloads[platform] += (game.downloads || 0);
+            platformViews[platform] += (game.views || 0);
         }
     });
     
@@ -818,6 +850,7 @@ function loadPlatformStats(games) {
                     <h4>${platform}</h4>
                     <p class="platform-stat-count">${count} game${count !== 1 ? 's' : ''}</p>
                     <p class="platform-stat-downloads">${platformDownloads[platform].toLocaleString()} downloads</p>
+                    <p class="platform-stat-views">${platformViews[platform].toLocaleString()} views</p>
                 </div>
             </div>
         `).join('');
@@ -916,6 +949,15 @@ function deleteGame(gameId) {
         games.splice(gameIndex, 1);
         localStorage.setItem('pspgamers_games', JSON.stringify(games));
         
+        // Also remove any share links for this game
+        const shareLinks = JSON.parse(localStorage.getItem('pspgamers_shareLinks') || '{}');
+        Object.keys(shareLinks).forEach(key => {
+            if (shareLinks[key].gameId === gameId) {
+                delete shareLinks[key];
+            }
+        });
+        localStorage.setItem('pspgamers_shareLinks', JSON.stringify(shareLinks));
+        
         showAdminMessage(`"${gameName}" deleted successfully!`, 'success');
         logActivity(`Deleted game: ${gameName}`);
         
@@ -928,15 +970,242 @@ function deleteGame(gameId) {
     }
 }
 
+// Setup share buttons
+function setupShareButtons() {
+    // Share functionality is handled by showShareOptions function
+}
+
+// Show share options modal
+function showShareOptions(gameId) {
+    const games = JSON.parse(localStorage.getItem('pspgamers_games') || '[]');
+    const game = games.find(g => g.id === gameId);
+    
+    if (!game) {
+        showAdminMessage('Game not found!', 'error');
+        return;
+    }
+    
+    // Generate share link
+    const shareInfo = generateGameShareLink(gameId);
+    const directLink = `${window.location.origin || 'https://darklord813.github.io'}/game.html?id=${gameId}`;
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'share-modal-overlay';
+    modal.innerHTML = `
+        <div class="share-modal">
+            <div class="share-modal-header">
+                <h3><i class="fas fa-share-alt"></i> Share "${game.name}"</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="share-modal-body">
+                <!-- Direct Link -->
+                <div class="share-option">
+                    <h4><i class="fas fa-link"></i> Direct Link</h4>
+                    <div class="link-container">
+                        <input type="text" readonly value="${directLink}" id="directLink">
+                        <button class="copy-btn" onclick="copyToClipboard('directLink')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <small>Permanent link to this game</small>
+                </div>
+                
+                <!-- Share Link -->
+                <div class="share-option">
+                    <h4><i class="fas fa-share-square"></i> Share Link (30 days)</h4>
+                    <div class="link-container">
+                        <input type="text" readonly value="${shareInfo.url}" id="shareLink">
+                        <button class="copy-btn" onclick="copyToClipboard('shareLink')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <small>Share Code: <code>${shareInfo.code}</code> | Expires: ${new Date(shareInfo.expires).toLocaleDateString()}</small>
+                </div>
+                
+                <!-- Quick Share -->
+                <div class="quick-share">
+                    <h4><i class="fas fa-rocket"></i> Quick Share</h4>
+                    <div class="share-buttons">
+                        <button class="share-btn whatsapp" onclick="quickShare('whatsapp', ${gameId})">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </button>
+                        <button class="share-btn telegram" onclick="quickShare('telegram', ${gameId})">
+                            <i class="fab fa-telegram"></i> Telegram
+                        </button>
+                        <button class="share-btn facebook" onclick="quickShare('facebook', ${gameId})">
+                            <i class="fab fa-facebook"></i> Facebook
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- QR Code -->
+                <div class="qr-section">
+                    <h4><i class="fas fa-qrcode"></i> QR Code</h4>
+                    <div id="qrcode"></div>
+                    <button class="btn-secondary" onclick="downloadQRCode('${shareInfo.url}', '${game.name}')">
+                        <i class="fas fa-download"></i> Download QR
+                    </button>
+                </div>
+            </div>
+            <div class="share-modal-footer">
+                <button class="btn-primary" onclick="closeShareModal()">
+                    <i class="fas fa-check"></i> Done
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal handlers
+    modal.querySelector('.close-modal').addEventListener('click', closeShareModal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeShareModal();
+        }
+    });
+    
+    // Generate QR Code
+    generateQRCode(shareInfo.url, 'qrcode');
+    
+    // Log activity
+    logActivity(`Generated share link for: ${game.name}`);
+}
+
+// Generate QR Code
+function generateQRCode(text, elementId) {
+    // Simple QR code generation using Google Charts API
+    const qrSize = 150;
+    const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=${qrSize}x${qrSize}&chl=${encodeURIComponent(text)}`;
+    
+    const qrElement = document.getElementById(elementId);
+    if (qrElement) {
+        qrElement.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width: ${qrSize}px; height: ${qrSize}px;">`;
+    }
+}
+
+// Download QR Code
+function downloadQRCode(url, gameName) {
+    const qrSize = 300;
+    const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=${qrSize}x${qrSize}&chl=${encodeURIComponent(url)}`;
+    
+    // Create temporary link
+    const link = document.createElement('a');
+    link.href = qrUrl;
+    link.download = `pspgamers-qr-${gameName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAdminMessage('QR Code downloaded!', 'success');
+}
+
+// Quick share to social media
+function quickShare(platform, gameId) {
+    const games = JSON.parse(localStorage.getItem('pspgamers_games') || '[]');
+    const game = games.find(g => g.id === gameId);
+    
+    if (!game) return;
+    
+    const shareInfo = generateGameShareLink(gameId);
+    const message = `🎮 Check out "${game.name}" on PSP GAMERS!\n\n📱 Platform: ${game.platform}\n📦 Size: ${game.size}\n⭐ MOD: ${game.modInfo}\n\nDownload now: ${shareInfo.url}`;
+    
+    let shareUrl = '';
+    
+    switch(platform) {
+        case 'whatsapp':
+            shareUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            break;
+        case 'telegram':
+            shareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareInfo.url)}&text=${encodeURIComponent(message)}`;
+            break;
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareInfo.url)}`;
+            break;
+        default:
+            return;
+    }
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+    showAdminMessage(`Shared to ${platform} successfully!`, 'success');
+    logActivity(`Shared game to ${platform}: ${game.name}`);
+}
+
+// Copy to clipboard
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.select();
+        element.setSelectionRange(0, 99999); // For mobile devices
+        
+        navigator.clipboard.writeText(element.value)
+            .then(() => {
+                showAdminMessage('Link copied to clipboard!', 'success');
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+                // Fallback for older browsers
+                document.execCommand('copy');
+                showAdminMessage('Link copied!', 'success');
+            });
+    }
+}
+
+// Close share modal
+function closeShareModal() {
+    const modal = document.querySelector('.share-modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Generate game share link
+function generateGameShareLink(gameId) {
+    // Generate unique share code
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 10);
+    const shareCode = `psp_${gameId}_${timestamp}_${random}`;
+    
+    // Create share data
+    const shareData = {
+        code: shareCode,
+        gameId: gameId,
+        created: new Date().toISOString(),
+        expires: new Date(timestamp + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        views: 0
+    };
+    
+    // Save to localStorage
+    let shareLinks = JSON.parse(localStorage.getItem('pspgamers_shareLinks') || '{}');
+    shareLinks[shareCode] = shareData;
+    localStorage.setItem('pspgamers_shareLinks', JSON.stringify(shareLinks));
+    
+    // Generate URL
+    const baseUrl = window.location.origin || 'https://darklord813.github.io';
+    const shareUrl = `${baseUrl}/game.html?share=${shareCode}`;
+    
+    return {
+        code: shareCode,
+        url: shareUrl,
+        expires: shareData.expires,
+        directUrl: `${baseUrl}/game.html?id=${gameId}`
+    };
+}
+
 // Setup security section
 function setupSecurityButtons() {
     // Clear cache button
     document.getElementById('clearCache')?.addEventListener('click', function() {
-        if (confirm('Clear all cached data? This will remove:\n• All games\n• All ratings\n• User preferences\n\nThis action cannot be undone!')) {
+        if (confirm('Clear all cached data? This will remove:\n• All games\n• All ratings\n• User preferences\n• Share links\n\nThis action cannot be undone!')) {
             localStorage.removeItem('pspgamers_games');
             localStorage.removeItem('pspgamers_ratings');
             localStorage.removeItem('pspgamers_userId');
             localStorage.removeItem('pspgamers_theme');
+            localStorage.removeItem('pspgamers_shareLinks');
+            localStorage.removeItem('pspgamers_gameViews');
+            localStorage.removeItem('pspgamers_shareAccess');
+            localStorage.removeItem('pspgamers_platformDownloads');
             
             showAdminMessage('All cache cleared successfully!', 'success');
             logActivity('Cleared all cache');
@@ -1033,6 +1302,244 @@ function showAdminMessage(message, type = 'info') {
     }, 5000);
 }
 
+// Add share styles
+function addShareStyles() {
+    if (!document.getElementById('share-styles')) {
+        const style = document.createElement('style');
+        style.id = 'share-styles';
+        style.textContent = `
+            .share-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                backdrop-filter: blur(5px);
+            }
+            
+            .share-modal {
+                background: white;
+                border-radius: 20px;
+                width: 90%;
+                max-width: 500px;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                animation: modalSlideIn 0.3s ease;
+            }
+            
+            @keyframes modalSlideIn {
+                from { transform: translateY(-50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            
+            .share-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 25px;
+                border-bottom: 2px solid #f0f0f0;
+            }
+            
+            .share-modal-header h3 {
+                margin: 0;
+                font-size: 20px;
+                color: #333;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .close-modal {
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: #666;
+                cursor: pointer;
+                padding: 5px;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .close-modal:hover {
+                background: #f0f0f0;
+                color: #333;
+            }
+            
+            .share-modal-body {
+                padding: 25px;
+            }
+            
+            .share-option {
+                margin-bottom: 25px;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 15px;
+                border-left: 4px solid #667eea;
+            }
+            
+            .share-option h4 {
+                margin: 0 0 15px 0;
+                color: #333;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .link-container {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .link-container input {
+                flex: 1;
+                padding: 12px 15px;
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                font-family: monospace;
+                font-size: 14px;
+                background: white;
+                color: #333;
+            }
+            
+            .link-container input:read-only {
+                cursor: text;
+            }
+            
+            .copy-btn {
+                background: #4CAF50;
+                color: white;
+                border: none;
+                padding: 0 20px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.3s;
+            }
+            
+            .copy-btn:hover {
+                background: #45a049;
+                transform: translateY(-2px);
+            }
+            
+            .quick-share {
+                margin: 30px 0;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 15px;
+            }
+            
+            .quick-share h4 {
+                margin: 0 0 20px 0;
+                color: #333;
+            }
+            
+            .share-buttons {
+                display: flex;
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+            
+            .share-btn {
+                flex: 1;
+                padding: 15px;
+                border: none;
+                border-radius: 12px;
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                transition: all 0.3s;
+                min-width: 120px;
+            }
+            
+            .share-btn.whatsapp { background: #25D366; }
+            .share-btn.telegram { background: #0088cc; }
+            .share-btn.facebook { background: #1877F2; }
+            .share-btn.copy { background: #6c757d; }
+            
+            .share-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            }
+            
+            .qr-section {
+                text-align: center;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 15px;
+                margin-top: 20px;
+            }
+            
+            .qr-section h4 {
+                margin: 0 0 20px 0;
+                color: #333;
+            }
+            
+            .share-modal-footer {
+                padding: 20px 25px;
+                border-top: 2px solid #f0f0f0;
+                text-align: right;
+            }
+            
+            .admin-game-actions .btn-share {
+                background: #17a2b8;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 10px;
+                border: none;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+                transition: all 0.3s;
+            }
+            
+            .admin-game-actions .btn-share:hover {
+                background: #138496;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+            }
+            
+            .admin-game-actions {
+                display: flex;
+                gap: 12px;
+            }
+            
+            .admin-game-date {
+                font-size: 12px;
+                color: #666;
+                margin-top: 10px;
+            }
+            
+            .platform-stat-downloads,
+            .platform-stat-views {
+                font-size: 12px;
+                color: #666;
+                margin: 2px 0;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
 // Logout function
 function logout() {
     localStorage.removeItem('adminAuthenticated');
@@ -1044,4 +1551,9 @@ function logout() {
 // Make functions available globally
 window.editGame = editGame;
 window.deleteGame = deleteGame;
+window.showShareOptions = showShareOptions;
+window.copyToClipboard = copyToClipboard;
+window.quickShare = quickShare;
+window.closeShareModal = closeShareModal;
+window.downloadQRCode = downloadQRCode;
 window.logout = logout;
