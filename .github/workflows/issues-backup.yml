@@ -1,0 +1,28 @@
+name: Backup Issues
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup issues to JSON
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            });
+            
+            // Save to file
+            const fs = require('fs');
+            fs.writeFileSync('issues-backup.json', JSON.stringify(issues.data, null, 2));
+            
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: issues-backup
+          path: issues-backup.json
