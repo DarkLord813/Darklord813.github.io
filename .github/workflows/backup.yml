@@ -1,4 +1,4 @@
-name: Backup Debug
+name: Backup Fix
 on:
   push:
     branches: [main]
@@ -8,41 +8,23 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           
-      - name: 🔍 Debug Info
+      - name: Setup Git
         run: |
-          echo "=== DEBUG INFO ==="
-          echo "Current directory: $(pwd)"
-          echo "Files in directory:"
-          ls -la
-          echo "Git status:"
-          git status
-          echo "Git remote:"
-          git remote -v
-          echo "Git branches:"
-          git branch -a
-          echo "=== END DEBUG ==="
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
           
-      - name: ⚙️ Setup Git
+      - name: Backup to Branch
         run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Fetch all branches first
+          git fetch --all
           
-      - name: 🔄 Create Backup Branch
-        run: |
-          echo "Creating backup branch..."
-          # First, fetch all branches
-          git fetch origin
+          # Delete old backup branch if exists
+          git push origin --delete backup-branch 2>/dev/null || true
           
-          # Create backup branch from current main
+          # Create fresh backup branch
           git checkout -b backup-branch
-          
-      - name: 🚀 Push to Backup
-        run: |
-          echo "Pushing to backup-branch..."
-          git push origin backup-branch --force
-          echo "✅ SUCCESS! Backup created."
+          git push -u origin backup-branch
