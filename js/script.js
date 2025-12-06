@@ -1,5 +1,8 @@
 // Main Website Functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup auto-backup
+    setupAutoBackup();
+    
     // Check if we're on game.html page
     if (window.location.pathname.includes('game.html')) {
         handleGamePage();
@@ -27,6 +30,68 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add full screen styles
     addFullScreenStyles();
 });
+
+// Auto-backup feature
+function setupAutoBackup() {
+    const today = new Date().toDateString();
+    const lastAutoBackup = localStorage.getItem('pspgamers_lastAutoBackup');
+    
+    // Create auto-backup once per day
+    if (lastAutoBackup !== today) {
+        createAutoBackup();
+        localStorage.setItem('pspgamers_lastAutoBackup', today);
+    }
+    
+    // Also backup on page unload (optional)
+    window.addEventListener('beforeunload', function() {
+        // Quick backup of critical data
+        backupCriticalData();
+    });
+}
+
+// Create automatic backup
+function createAutoBackup() {
+    try {
+        const games = JSON.parse(localStorage.getItem('pspgamers_games') || '[]');
+        if (games.length === 0) return; // No data to backup
+        
+        const autoBackup = {
+            games: games,
+            ratings: JSON.parse(localStorage.getItem('pspgamers_ratings') || '{}'),
+            date: new Date().toISOString(),
+            count: games.length
+        };
+        
+        // Store last 5 auto-backups
+        let autoBackups = JSON.parse(localStorage.getItem('pspgamers_autoBackups') || '[]');
+        autoBackups.unshift(autoBackup);
+        
+        // Keep only last 5 backups
+        if (autoBackups.length > 5) {
+            autoBackups = autoBackups.slice(0, 5);
+        }
+        
+        localStorage.setItem('pspgamers_autoBackups', JSON.stringify(autoBackups));
+        
+        console.log('Auto-backup created:', autoBackup.date);
+    } catch (error) {
+        console.error('Auto-backup failed:', error);
+    }
+}
+
+// Backup critical data on unload
+function backupCriticalData() {
+    try {
+        const criticalData = {
+            games: JSON.parse(localStorage.getItem('pspgamers_games') || '[]'),
+            timestamp: Date.now()
+        };
+        
+        localStorage.setItem('pspgamers_lastSessionBackup', JSON.stringify(criticalData));
+    } catch (error) {
+        // Silent fail for unload backup
+    }
+}
 
 // Handle game.html page
 function handleGamePage() {
@@ -445,7 +510,7 @@ function createGameCard(game) {
         
         // Empty stars
         const remaining = 5 - fullStars - (hasHalfStar ? 1 : 0);
-        for (let i = 0; i < remaining; i++) {
+        for (let i = 0; i <remaining; i++) {
             stars += '<i class="far fa-star"></i>';
         }
         
